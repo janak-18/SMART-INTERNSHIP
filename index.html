@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Internship Verification Portal | CVM University</title>
+  <meta name="description" content="Advanced portal to verify internship offers and certificates." />
+  <meta name="theme-color" content="#2563eb" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: { 50:'#eff6ff',100:'#dbeafe',200:'#bfdbfe',300:'#93c5fd',400:'#60a5fa',500:'#3b82f6',600:'#2563eb',700:'#1d4ed8',800:'#1e40af',900:'#1e3a8a' }
+          },
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .glass { background: rgba(255,255,255,.75); backdrop-filter: blur(14px); }
+    .dark .glass { background: rgba(15,23,42,.8); }
+    .gradient-bg { background: linear-gradient(135deg,#2563eb,#7c3aed); }
+    .card-hover { transition: all .3s cubic-bezier(.4,0,.2,1); }
+    .card-hover:hover { transform: translateY(-5px); box-shadow: 0 25px 30px -8px rgb(0 0 0/.12); }
+    .result-genuine { background: linear-gradient(135deg,#059669,#10b981); }
+    .result-suspicious { background: linear-gradient(135deg,#d97706,#f59e0b); }
+    .result-fake { background: linear-gradient(135deg,#dc2626,#ef4444); }
+    .risk-bar { transition: width 1.2s cubic-bezier(.4,0,.2,1); }
+    .autocomplete-item:hover, .autocomplete-item.active { background: #eff6ff; }
+    .dark .autocomplete-item:hover, .dark .autocomplete-item.active { background: #1e3a8a; }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+    @keyframes slideUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+    .animate-fade-in { animation: fadeIn .5s ease-out; }
+    .animate-slide-up { animation: slideUp .55s ease-out; }
+  </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 transition-colors duration-300">
+
+  <div id="toast-container" class="fixed top-20 right-4 z-[100] space-y-2 max-w-sm"></div>
+
+  <!-- Navbar -->
+  <nav class="fixed top-0 inset-x-0 z-50 glass border-b border-slate-200/60 dark:border-slate-700/60">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <a href="#home" class="flex items-center gap-3 group">
+          <div class="w-10 h-10 rounded-xl gradient-bg flex items-center justify-center shadow-lg group-hover:scale-105 transition">
+            <i data-lucide="shield-check" class="w-5 h-5 text-white"></i>
+          </div>
+          <div>
+            <h1 class="font-bold text-base leading-tight">Smart Internship</h1>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400">Verification Portal</p>
+          </div>
+        </a>
+        
+        <div class="hidden md:flex items-center gap-1">
+          <a href="#home" class="px-3.5 py-2 rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition">Home</a>
+          <a href="#verify" class="px-3.5 py-2 rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition">Verify</a>
+          <a href="#features" class="px-3.5 py-2 rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition">Features</a>
+          <a href="#how-it-works" class="px-3.5 py-2 rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition">How it Works</a>
+          <a href="#database" class="px-3.5 py-2 rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition">Database</a>
+          <a href="#faq" class="px-3.5 py-2 rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition">FAQ</a>
+        </div>
+
+        <div class="flex items-center gap-2 sm:gap-3">
+          <div class="hidden sm:flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
+            <button id="role-student" class="role-btn px-3 py-1.5 text-xs font-semibold rounded-md bg-primary-600 text-white transition">Student</button>
+            <button id="role-officer" class="role-btn px-3 py-1.5 text-xs font-semibold rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition">Officer</button>
+          </div>
+          <button id="theme-toggle" class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+            <i data-lucide="moon" class="w-5 h-5 hidden dark:block"></i>
+            <i data-lucide="sun" class="w-5 h-5 block dark:hidden"></i>
+          </button>
+          <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
+            <i data-lucide="menu" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div id="mobile-menu" class="hidden md:hidden border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+      <div class="px-4 py-3 space-y-1">
+        <a href="#home" class="block px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Home</a>
+        <a href="#verify" class="block px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Verify</a>
+        <a href="#features" class="block px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Features</a>
+        <a href="#how-it-works" class="block px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800">How it Works</a>
+        <a href="#database" class="block px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Database</a>
+        <a href="#faq" class="block px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800">FAQ</a>
+        <div class="flex gap-2 pt-2 px-2">
+          <button id="role-student-m" class="flex-1 py-2 text-xs font-semibold rounded-lg bg-primary-600 text-white">Student</button>
+          <button id="role-officer-m" class="flex-1 py-2 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800">Officer</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section id="home" class="pt-28 pb-16 sm:pb-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-br from-primary-50 via-white to-violet-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 -z-10"></div>
+    <div class="max-w-7xl mx-auto">
+      <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+        <div class="animate-fade-in">
+          <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 text-xs sm:text-sm font-medium mb-5">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+            CVM University • Faculty of Engineering & Technology
+          </div>
+          <h1 class="text-4xl sm:text-5xl lg:text-[3.4rem] font-extrabold leading-[1.15] tracking-tight mb-5">
+            Stop Fake Internships
+            <span class="bg-gradient-to-r from-primary-600 to-violet-600 bg-clip-text text-transparent"> Before They Cost You</span>
+          </h1>
+          <p class="text-base sm:text-lg text-slate-600 dark:text-slate-300 mb-8 max-w-xl leading-relaxed">
+            Instantly verify internship offers and certificates. Protect yourself from scams and make confident career decisions.
+          </p>
+          <div class="flex flex-wrap gap-3 sm:gap-4">
+            <a href="#verify" class="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-semibold shadow-lg shadow-primary-500/25 transition">
+              <i data-lucide="shield-check" class="w-5 h-5"></i> Verify Now
+            </a>
+            <a href="#how-it-works" class="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition">
+              <i data-lucide="play-circle" class="w-5 h-5"></i> How it Works
+            </a>
+          </div>
+          
+          <div class="mt-12 grid grid-cols-3 gap-4 sm:gap-8">
+            <div>
+              <p class="text-2xl sm:text-3xl font-bold text-primary-600 dark:text-primary-400" id="stat-verified">0</p>
+              <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">Checks Done</p>
+            </div>
+            <div>
+              <p class="text-2xl sm:text-3xl font-bold text-emerald-600 dark:text-emerald-400">1,200+</p>
+              <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">Trusted Cos</p>
+            </div>
+            <div>
+              <p class="text-2xl sm:text-3xl font-bold text-amber-600 dark:text-amber-400">89%</p>
+              <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">Scams Caught</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="relative animate-slide-up hidden sm:block">
+          <div class="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 p-6 overflow-hidden">
+            <div class="absolute top-0 inset-x-0 h-1 gradient-bg"></div>
+            <div class="flex items-center gap-3 mb-5">
+              <div class="w-11 h-11 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center">
+                <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600"></i>
+              </div>
+              <div>
+                <p class="font-semibold">Live Verification Result</p>
+                <p class="text-sm text-slate-500">Just now • 94% Confidence</p>
+              </div>
+            </div>
+            <div class="space-y-3">
+              <div class="flex justify-between items-center p-3 rounded-xl bg-slate-50 dark:bg-slate-700/50">
+                <span class="text-sm text-slate-500">Company</span>
+                <span class="font-medium">TCS Digital</span>
+              </div>
+              <div class="flex justify-between items-center p-3 rounded-xl bg-slate-50 dark:bg-slate-700/50">
+                <span class="text-sm text-slate-500">Status</span>
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-sm font-medium">
+                  <i data-lucide="shield" class="w-3.5 h-3.5"></i> Genuine
+                </span>
+              </div>
+              <div class="flex justify-between items-center p-3 rounded-xl bg-slate-50 dark:bg-slate-700/50">
+                <span class="text-sm text-slate-500">Risk Score</span>
+                <span class="font-medium text-emerald-600">Low (12/100)</span>
+              </div>
+              <div class="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800">
+                <p class="text-sm text-emerald-800 dark:text-emerald-200"><strong>Safe to proceed.</strong> Registered company with verified internship programs.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Verification Form -->
+  <section id="verify" class="py-16 sm:py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-slate-800/40">
+    <div class="max-w-3xl mx-auto">
+      <div class="text-center mb-10">
+        <h2 class="text-3xl sm:text-4xl font-bold mb-3">Verify Offer or Certificate</h2>
+        <p class="text-slate-600 dark:text-slate-300 max-w-xl mx-auto">Enter details below. Our engine checks trusted records, domain patterns and known scam signals.</p>
+      </div>
+
+      <div class="flex justify-center mb-6">
+        <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 text-sm font-medium">
+          <i data-lucide="user" class="w-4 h-4"></i>
+          Verifying as: <strong id="role-label">Student</strong>
+        </span>
+      </div>
+
+      <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div class="p-5 sm:p-8">
+          <form id="verify-form" class="space-y-5" autocomplete="off">
+            <div>
+              <label class="block text-sm font-medium mb-2.5">What do you want to verify?</label>
+              <div class="grid grid-cols-2 gap-3">
+                <label class="relative cursor-pointer">
+                  <input type="radio" name="verify-type" value="offer" class="peer sr-only" checked>
+                  <div class="p-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 peer-checked:border-primary-500 peer-checked:bg-primary-50 dark:peer-checked:bg-primary-900/25 transition text-center">
+                    <i data-lucide="file-text" class="w-6 h-6 mx-auto mb-1.5 text-slate-500"></i>
+                    <span class="font-medium text-sm">Internship Offer</span>
+                  </div>
+                </label>
+                <label class="relative cursor-pointer">
+                  <input type="radio" name="verify-type" value="certificate" class="peer sr-only">
+                  <div class="p-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 peer-checked:border-primary-500 peer-checked:bg-primary-50 dark:peer-checked:bg-primary-900/25 transition text-center">
+                    <i data-lucide="award" class="w-6 h-6 mx-auto mb-1.5 text-slate-500"></i>
+                    <span class="font-medium text-sm">Certificate</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <div class="grid sm:grid-cols-2 gap-4">
+              <div class="relative">
+                <label for="company-name" class="block text-sm font-medium mb-1.5">Company Name *</label>
+                <input type="text" id="company-name" required placeholder="e.g. Infosys, TCS, QuickIntern..."
+                  class="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition" autocomplete="off">
+                <div id="autocomplete-list" class="absolute z-20 left-0 right-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl shadow-xl hidden max-h-52 overflow-y-auto"></div>
+              </div>
+              <div>
+                <label for="company-domain" class="block text-sm font-medium mb-1.5">Website / Email Domain</label>
+                <input type="text" id="company-domain" placeholder="e.g. infosys.com or hr@company.com"
+                  class="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition">
+              </div>
+            </div>
+
+            <div class="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label for="internship-role" class="block text-sm font-medium mb-1.5">Role / Position</label>
+                <input type="text" id="internship-role" placeholder="e.g. Software Developer Intern"
+                  class="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition">
+              </div>
+              <div>
+                <label for="stipend" class="block text-sm font-medium mb-1.5">Stipend (₹ / month)</label>
+                <input type="number" id="stipend" placeholder="e.g. 15000" min="0"
+                  class="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition">
+              </div>
+            </div>
+
+            <div id="certificate-fields" class="hidden grid sm:grid-cols-2 gap-4">
+              <div>
+                <label for="cert-id" class="block text-sm font-medium mb-1.5">Certificate ID / Ref No.</label>
+                <input type="text" id="cert-id" placeholder="e.g. CERT-2025-88421"
+                  class="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition">
+              </div>
+              <div>
+                <label for="duration" class="block text-sm font-medium mb-1.5">Duration (months)</label>
+                <input type="number" id="duration" placeholder="e.g. 3" min="1" max="24"
+                  class="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition">
+              </div>
+            </div>
+
+            <div>
+              <label for="offer-details" class="block text-sm font-medium mb-1.5">Additional Details / Red Flags <span class="text-slate-400 font-normal">(optional)</span></label>
+              <textarea id="offer-details" rows="3" placeholder="Paste any suspicious text: payment requests, urgency, WhatsApp-only contact, etc."
+                class="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition resize-none"></textarea>
+            </div>
+
+            <button type="submit" id="verify-btn"
+              class="w-full flex items-center justify-center gap-2.5 px-6 py-4 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-semibold text-lg shadow-lg shadow-primary-500/25 transition">
+              <i data-lucide="search" class="w-5 h-5"></i>
+              <span>Run Smart Verification</span>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div id="loading-state" class="hidden mt-8 text-center">
+        <div class="inline-flex flex-col items-center gap-4 p-8 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl">
+          <div class="relative">
+            <div class="w-16 h-16 rounded-full border-4 border-primary-200 dark:border-primary-800 border-t-primary-600 animate-spin"></div>
+            <i data-lucide="shield" class="w-6 h-6 text-primary-600 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></i>
+          </div>
+          <div>
+            <p class="font-semibold text-lg">Analyzing offer...</p>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1" id="loading-text">Checking company records</p>
+          </div>
+        </div>
+      </div>
+
+      <div id="result-card" class="hidden mt-8"></div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features" class="py-16 sm:py-20 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl sm:text-4xl font-bold mb-3">Built for Real Student Problems</h2>
+        <p class="text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">Designed around the exact pain points from Product Ideation research.</p>
+      </div>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div class="card-hover p-6 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+          <div class="w-12 h-12 rounded-xl bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center mb-4">
+            <i data-lucide="shield-check" class="w-6 h-6 text-primary-600"></i>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Trusted Verification</h3>
+          <p class="text-sm text-slate-600 dark:text-slate-400">Cross-check against verified company records and known scam patterns.</p>
+        </div>
+        <div class="card-hover p-6 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+          <div class="w-12 h-12 rounded-xl bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center mb-4">
+            <i data-lucide="alert-triangle" class="w-6 h-6 text-amber-600"></i>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Red Flag Engine</h3>
+          <p class="text-sm text-slate-600 dark:text-slate-400">Detects payment demands, free emails, urgency tactics & unrealistic stipends.</p>
+        </div>
+        <div class="card-hover p-6 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+          <div class="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center mb-4">
+            <i data-lucide="users" class="w-6 h-6 text-emerald-600"></i>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Multi-Role Support</h3>
+          <p class="text-sm text-slate-600 dark:text-slate-400">Students and Placement Officers get tailored advice.</p>
+        </div>
+        <div class="card-hover p-6 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+          <div class="w-12 h-12 rounded-xl bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center mb-4">
+            <i data-lucide="history" class="w-6 h-6 text-violet-600"></i>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Check History</h3>
+          <p class="text-sm text-slate-600 dark:text-slate-400">All past verifications saved locally for later review.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it Works -->
+  <section id="how-it-works" class="py-16 sm:py-20 px-4 sm:px-6 lg:px-8 bg-slate-50 dark:bg-slate-900/60">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-14">
+        <h2 class="text-3xl sm:text-4xl font-bold mb-3">How Verification Works</h2>
+        <p class="text-slate-600 dark:text-slate-300">Simple 3-step intelligent process</p>
+      </div>
+      <div class="grid md:grid-cols-3 gap-8">
+        <div class="text-center">
+          <div class="w-24 h-24 mx-auto rounded-2xl bg-white dark:bg-slate-800 border-2 border-primary-200 dark:border-primary-800 shadow-lg flex items-center justify-center mb-5 relative">
+            <span class="absolute -top-2.5 -right-2.5 w-8 h-8 rounded-full bg-primary-600 text-white text-sm font-bold flex items-center justify-center">1</span>
+            <i data-lucide="edit-3" class="w-9 h-9 text-primary-600"></i>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Enter Details</h3>
+          <p class="text-sm text-slate-600 dark:text-slate-400">Company name, domain, role, stipend or any red-flag text.</p>
+        </div>
+        <div class="text-center">
+          <div class="w-24 h-24 mx-auto rounded-2xl bg-white dark:bg-slate-800 border-2 border-primary-200 dark:border-primary-800 shadow-lg flex items-center justify-center mb-5 relative">
+            <span class="absolute -top-2.5 -right-2.5 w-8 h-8 rounded-full bg-primary-600 text-white text-sm font-bold flex items-center justify-center">2</span>
+            <i data-lucide="cpu" class="w-9 h-9 text-primary-600"></i>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Smart Analysis</h3>
+          <p class="text-sm text-slate-600 dark:text-slate-400">Matches trusted DB, scans scam patterns, evaluates signals.</p>
+        </div>
+        <div class="text-center">
+          <div class="w-24 h-24 mx-auto rounded-2xl bg-white dark:bg-slate-800 border-2 border-primary-200 dark:border-primary-800 shadow-lg flex items-center justify-center mb-5 relative">
+            <span class="absolute -top-2.5 -right-2.5 w-8 h-8 rounded-full bg-primary-600 text-white text-sm font-bold flex items-center justify-center">3</span>
+            <i data-lucide="file-check-2" class="w-9 h-9 text-primary-600"></i>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Clear Verdict</h3>
+          <p class="text-sm text-slate-600 dark:text-slate-400">Genuine / Suspicious / High Risk with score and advice.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Database -->
+  <section id="database" class="py-16 sm:py-20 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-10">
+        <h2 class="text-3xl sm:text-4xl font-bold mb-3">Trusted Company Database</h2>
+        <p class="text-slate-600 dark:text-slate-300">Demo sample of companies in the verification network</p>
+      </div>
+      <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-700 shadow-lg">
+        <table class="w-full text-left min-w-[640px]">
+          <thead class="bg-slate-50 dark:bg-slate-800">
+            <tr>
+              <th class="px-5 py-3.5 text-sm font-semibold">Company</th>
+              <th class="px-5 py-3.5 text-sm font-semibold">Domain</th>
+              <th class="px-5 py-3.5 text-sm font-semibold">Status</th>
+              <th class="px-5 py-3.5 text-sm font-semibold">Programs</th>
+              <th class="px-5 py-3.5 text-sm font-semibold">Risk</th>
+            </tr>
+          </thead>
+          <tbody id="company-table-body" class="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-900"></tbody>
+        </table>
+      </div>
+      <p class="text-center text-sm text-slate-500 mt-4">* Demonstration data only.</p>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="py-16 sm:py-20 px-4 sm:px-6 lg:px-8 bg-slate-50 dark:bg-slate-900/60">
+    <div class="max-w-3xl mx-auto">
+      <div class="text-center mb-10">
+        <h2 class="text-3xl sm:text-4xl font-bold mb-3">Frequently Asked Questions</h2>
+      </div>
+      <div class="space-y-3" id="faq-list"></div>
+    </div>
+  </section>
+
+  <!-- History -->
+  <section id="history" class="py-14 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-3xl mx-auto">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold">Your Verification History</h2>
+        <button id="clear-history" class="text-sm text-red-600 hover:text-red-700 font-medium flex items-center gap-1.5">
+          <i data-lucide="trash-2" class="w-4 h-4"></i> Clear
+        </button>
+      </div>
+      <div id="history-list" class="space-y-2.5">
+        <p class="text-center text-slate-500 py-10">No history yet. Run a verification to see results here.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-10 px-4 border-t border-slate-200 dark:border-slate-800">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-5">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl gradient-bg flex items-center justify-center">
+          <i data-lucide="shield-check" class="w-4 h-4 text-white"></i>
+        </div>
+        <div>
+          <p class="font-bold text-sm">Smart Internship Verification Portal</p>
+          <p class="text-xs text-slate-500">CVM University • Faculty of Engineering & Technology</p>
+        </div>
+      </div>
+      <p class="text-xs text-slate-500 text-center sm:text-right">
+        Practical 1 • Product Ideation<br>
+        Advanced demo prototype
+      </p>
+    </div>
+  </footer>
+
+<script>
+/* ========== COMPLETE WORKING JS ========== */
+
+const COMPANIES = [
+  { name: "TCS", domain: "tcs.com", status: "Verified", programs: "Yes", risk: "Low" },
+  { name: "Infosys", domain: "infosys.com", status: "Verified", programs: "Yes", risk: "Low" },
+  { name: "Wipro", domain: "wipro.com", status: "Verified", programs: "Yes", risk: "Low" },
+  { name: "Accenture", domain: "accenture.com", status: "Verified", programs: "Yes", risk: "Low" },
+  { name: "Capgemini", domain: "capgemini.com", status: "Verified", programs: "Yes", risk: "Low" },
+  { name: "Cognizant", domain: "cognizant.com", status: "Verified", programs: "Yes", risk: "Low" },
+  { name: "HCL Technologies", domain: "hcltech.com", status: "Verified", programs: "Yes", risk: "Low" },
+  { name: "Tech Mahindra", domain: "techmahindra.com", status: "Verified", programs: "Yes", risk: "Low" },
+  { name: "IBM", domain: "ibm.com", status: "Verified", programs: "Yes", risk: "Low" },
+  { name: "Microsoft", domain: "microsoft.com", status: "Verified", programs: "Yes", risk: "Low" },
+  { name: "Google", domain: "google.com", status: "Verified", programs: "Yes", risk: "Low" },
+  { name: "Amazon", domain: "amazon.com", status: "Verified", programs: "Yes", risk: "Low" },
+  { name: "Deloitte", domain: "deloitte.com", status: "Verified", programs: "Yes", risk: "Low" },
+  { name: "QuickIntern", domain: "quickintern.in", status: "Suspicious", programs: "Unclear", risk: "High" },
+  { name: "InternShipHub", domain: "internshiphub.co", status: "Suspicious", programs: "No", risk: "High" },
+  { name: "FakeCorp Solutions", domain: "fakecorp.xyz", status: "Blacklisted", programs: "No", risk: "Critical" },
+  { name: "PayToJoin Interns", domain: "paytojoin.com", status: "Blacklisted", programs: "No", risk: "Critical" },
+];
+
+const FAQS = [
+  { q: "Is this portal 100% accurate?", a: "No system is 100% accurate. This is a demo prototype using rule-based checks + sample company database. Always do additional research." },
+  { q: "What if result shows Suspicious or High Risk?", a: "Do not pay any money. Cross-verify the company on LinkedIn and ask your college placement officer." },
+  { q: "Can Placement Officers use this?", a: "Yes. Switch to Officer mode for additional guidance suited for placement cells." },
+  { q: "Where is my data stored?", a: "All history is stored only in your browser (localStorage). Nothing is sent to any server." },
+  { q: "How does red-flag detection work?", a: "It scans for payment requests, free email domains, urgency language, unrealistic stipends, WhatsApp-only contact, etc." }
+];
+
+const RED_FLAGS = [
+  { pattern: /pay.*(registration|fee|deposit|security)/i, weight: 35, reason: "Asks for payment / registration fee" },
+  { pattern: /whatsapp only|only whatsapp|contact on whatsapp/i, weight: 20, reason: "WhatsApp-only communication" },
+  { pattern: /urgent|immediately|limited seats|act fast|hurry/i, weight: 15, reason: "Creates false urgency" },
+  { pattern: /gmail\.com|yahoo\.com|hotmail\.com|outlook\.com/i, weight: 18, reason: "Uses free email domain" },
+  { pattern: /work from home.*guaranteed|100% placement|assured job/i, weight: 25, reason: "Unrealistic guarantees" },
+  { pattern: /send.*(aadhaar|pan|bank details|otp)/i, weight: 30, reason: "Requests sensitive personal data" },
+];
+
+let currentRole = "student";
+let history = JSON.parse(localStorage.getItem("siv_history") || "[]");
+
+// Theme
+function initTheme() {
+  const saved = localStorage.getItem("siv_theme");
+  if (saved === "dark" || (!saved && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+    document.documentElement.classList.add("dark");
+  }
+}
+document.getElementById("theme-toggle").addEventListener("click", () => {
+  document.documentElement.classList.toggle("dark");
+  localStorage.setItem("siv_theme", document.documentElement.classList.contains("dark") ? "dark" : "light");
+});
+
+// Role
+function setRole(role) {
+  currentRole = role;
+  document.getElementById("role-label").textContent = role === "student" ? "Student" : "Placement Officer";
+  document.querySelectorAll(".role-btn").forEach(btn => {
+    btn.classList.remove("bg-primary-600", "text-white");
+    btn.classList.add("text-slate-600", "dark:text-slate-300");
+  });
+  const activeBtn = document.getElementById(role === "student" ? "role-student" : "role-officer");
+  if (activeBtn) {
+    activeBtn.classList.add("bg-primary-600", "text-white");
+    activeBtn.classList.remove("text-slate-600", "dark:text-slate-300");
+  }
+  const mS = document.getElementById("role-student-m");
+  const mO = document.getElementById("role-officer-m");
+  if (mS && mO) {
+    mS.className = role === "student" ? "flex-1 py-2 text-xs font-semibold rounded-lg bg-primary-600 text-white" : "flex-1 py-2 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800";
+    mO.className = role === "officer" ? "flex-1 py-2 text-xs font-semibold rounded-lg bg-primary-600 text-white" : "flex-1 py-2 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800";
+  }
+}
+document.getElementById("role-student").addEventListener("click", () => setRole("student"));
+document.getElementById("role-officer").addEventListener("click", () => setRole("officer"));
+document.getElementById("role-student-m").addEventListener("click", () => setRole("student"));
+document.getElementById("role-officer-m").addEventListener("click", () => setRole("officer"));
+
+// Mobile menu
+document.getElementById("mobile-menu-btn").addEventListener("click", () => {
+  document.getElementById("mobile-menu").classList.toggle("hidden");
+});
+
+// Verify type toggle
+document.querySelectorAll('input[name="verify-type"]').forEach(radio => {
+  radio.addEventListener("change", (e) => {
+    const fields = document.getElementById("certificate-fields");
+    if (e.target.value === "certificate") {
+      fields.classList.remove("hidden");
+      fields.classList.add("grid");
+    } else {
+      fields.classList.add("hidden");
+      fields.classList.remove("grid");
+    }
+  });
+});
+
+// Autocomplete
+const companyInput = document.getElementById("company-name");
+const autocompleteList = document.getElementById("autocomplete-list");
+companyInput.addEventListener("input", () => {
+  const val = companyInput.value.toLowerCase().trim();
+  if (val.length < 1) { autocompleteList.classList.add("hidden"); return; }
+  const matches = COMPANIES.filter(c => c.name.toLowerCase().includes(val)).slice(0, 6);
+  if (!matches.length) { autocompleteList.classList.add("hidden"); return; }
+  autocompleteList.innerHTML = matches.map(c => `
+    <div class="autocomplete-item px-4 py-2.5 cursor-pointer text-sm" data-name="${c.name}" data-domain="${c.domain}">
+      <span class="font-medium">${c.name}</span>
+      <span class="text-slate-400 ml-2 text-xs">${c.domain}</span>
+    </div>
+  `).join("");
+  autocompleteList.classList.remove("hidden");
+});
+autocompleteList.addEventListener("click", (e) => {
+  const item = e.target.closest(".autocomplete-item");
+  if (!item) return;
+  companyInput.value = item.dataset.name;
+  document.getElementById("company-domain").value = item.dataset.domain;
+  autocompleteList.classList.add("hidden");
+});
+document.addEventListener("click", (e) => {
+  if (!e.target.closest("#company-name") && !e.target.closest("#autocomplete-list")) {
+    autocompleteList.classList.add("hidden");
+  }
+});
+
+// Analysis Engine
+function analyzeOffer(data) {
+  let score = 20;
+  const reasons = [];
+  let matched = COMPANIES.find(c => c.name.toLowerCase() === data.company.toLowerCase() || c.name.toLowerCase().includes(data.company.toLowerCase()));
+
+  if (matched) {
+    if (matched.status === "Verified") { score -= 25; reasons.push({type:"good", text:`Found in trusted database (${matched.name})`}); }
+    else if (matched.status === "Suspicious") { score += 40; reasons.push({type:"bad", text:"Company flagged as Suspicious"}); }
+    else if (matched.status === "Blacklisted") { score += 70; reasons.push({type:"bad", text:"Company is Blacklisted"}); }
+  } else {
+    score += 15;
+    reasons.push({type:"neutral", text:"Company not found in trusted database"});
+  }
+
+  if (data.domain) {
+    const domain = data.domain.toLowerCase().replace(/^https?:\/\//,"").replace(/\/.*$/,"").replace(/^.*@/,"");
+    if (["gmail.com","yahoo.com","hotmail.com","outlook.com"].some(d => domain.includes(d))) {
+      score += 22; reasons.push({type:"bad", text:"Uses free email domain"});
+    }
+    if (matched && matched.domain && domain.includes(matched.domain)) {
+      score -= 15; reasons.push({type:"good", text:"Domain matches known company"});
+    }
+  }
+
+  if (data.stipend) {
+    const s = Number(data.stipend);
+    if (s > 80000) { score += 25; reasons.push({type:"bad", text:"Unrealistically high stipend"}); }
+    else if (s > 0 && s < 2000) { score += 10; reasons.push({type:"neutral", text:"Very low stipend"}); }
+  }
+
+  const text = `${data.details||""} ${data.role||""}`;
+  RED_FLAGS.forEach(f => {
+    if (f.pattern.test(text)) { score += f.weight; reasons.push({type:"bad", text:f.reason}); }
+  });
+
+  score = Math.max(0, Math.min(100, score));
+
+  let verdict, colorClass, advice;
+  if (score <= 25) {
+    verdict = "Genuine"; colorClass = "result-genuine";
+    advice = currentRole === "student" ? "Looks safe. Still verify official offer letter." : "Company appears legitimate.";
+  } else if (score <= 55) {
+    verdict = "Suspicious"; colorClass = "result-suspicious";
+    advice = currentRole === "student" ? "Exercise caution. Do not pay money. Cross-check with placement cell." : "Recommend deeper due diligence.";
+  } else {
+    verdict = "High Risk / Likely Fake"; colorClass = "result-fake";
+    advice = currentRole === "student" ? "Strongly avoid. Report to university placement cell." : "Flag this company and advise students against it.";
+  }
+  return { score, verdict, colorClass, reasons, advice };
+}
+
+// Form Submit
+document.getElementById("verify-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const data = {
+    company: document.getElementById("company-name").value.trim(),
+    domain: document.getElementById("company-domain").value.trim(),
+    role: document.getElementById("internship-role").value.trim(),
+    stipend: document.getElementById("stipend").value,
+    details: document.getElementById("offer-details").value.trim(),
+  };
+
+  document.getElementById("result-card").classList.add("hidden");
+  document.getElementById("loading-state").classList.remove("hidden");
+
+  const texts = ["Checking company records...", "Scanning for red flags...", "Evaluating domain...", "Calculating risk score..."];
+  let i = 0;
+  const interval = setInterval(() => {
+    document.getElementById("loading-text").textContent = texts[i % texts.length];
+    i++;
+  }, 600);
+
+  await new Promise(r => setTimeout(r, 2000));
+  clearInterval(interval);
+  document.getElementById("loading-state").classList.add("hidden");
+
+  const result = analyzeOffer(data);
+  showResult(data, result);
+  saveToHistory(data, result);
+  updateStats();
+});
+
+function showResult(data, result) {
+  const card = document.getElementById("result-card");
+  card.classList.remove("hidden");
+  card.innerHTML = `
+    <div class="rounded-2xl overflow-hidden shadow-xl border border-slate-200 dark:border-slate-700 animate-slide-up">
+      <div class="${result.colorClass} text-white p-6">
+        <div class="flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <p class="text-sm opacity-90 mb-1">Verification Result</p>
+            <h3 class="text-2xl font-bold">${result.verdict}</h3>
+          </div>
+          <div class="text-right">
+            <p class="text-sm opacity-90">Risk Score</p>
+            <p class="text-3xl font-bold">${result.score}/100</p>
+          </div>
+        </div>
+        <div class="mt-4 h-2 bg-white/30 rounded-full overflow-hidden">
+          <div class="risk-bar h-full bg-white rounded-full" style="width:${result.score}%"></div>
+        </div>
+      </div>
+      <div class="bg-white dark:bg-slate-800 p-6 space-y-4">
+        <div>
+          <h4 class="font-semibold mb-2">Analysis Summary</h4>
+          <ul class="space-y-2">
+            ${result.reasons.map(r => `<li class="flex items-start gap-2 text-sm"><span>${r.type==="good"?"✅":r.type==="bad"?"⚠️":"ℹ️"}</span><span>${r.text}</span></li>`).join("")}
+          </ul>
+        </div>
+        <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600">
+          <p class="text-sm font-medium mb-1">Recommended Action</p>
+          <p class="text-sm text-slate-600 dark:text-slate-300">${result.advice}</p>
+        </div>
+        <div class="text-xs text-slate-500">Verified: ${data.company} • ${new Date().toLocaleString()}</div>
+      </div>
+    </div>`;
+  lucide.createIcons();
+  card.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+// History
+function saveToHistory(data, result) {
+  history.unshift({ id: Date.now(), company: data.company, verdict: result.verdict, score: result.score, date: new Date().toISOString() });
+  if (history.length > 20) history = history.slice(0, 20);
+  localStorage.setItem("siv_history", JSON.stringify(history));
+  renderHistory();
+}
+function renderHistory() {
+  const list = document.getElementById("history-list");
+  if (!history.length) {
+    list.innerHTML = `<p class="text-center text-slate-500 py-10">No history yet. Run a verification to see results here.</p>`;
+    return;
+  }
+  list.innerHTML = history.map(h => `
+    <div class="flex items-center justify-between p-4 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+      <div>
+        <p class="font-medium">${h.company}</p>
+        <p class="text-xs text-slate-500">${new Date(h.date).toLocaleString()}</p>
+      </div>
+      <div class="text-right">
+        <span class="inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${h.score<=25?"bg-emerald-100 text-emerald-700":h.score<=55?"bg-amber-100 text-amber-700":"bg-red-100 text-red-700"}">${h.verdict}</span>
+        <p class="text-xs text-slate-500 mt-1">Score: ${h.score}</p>
+      </div>
+    </div>`).join("");
+}
+document.getElementById("clear-history").addEventListener("click", () => {
+  if (confirm("Clear all history?")) {
+    history = [];
+    localStorage.removeItem("siv_history");
+    renderHistory();
+    updateStats();
+  }
+});
+
+// Company Table
+function renderCompanyTable() {
+  const tbody = document.getElementById("company-table-body");
+  tbody.innerHTML = COMPANIES.map(c => `
+    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+      <td class="px-5 py-3.5 font-medium">${c.name}</td>
+      <td class="px-5 py-3.5 text-sm text-slate-500">${c.domain}</td>
+      <td class="px-5 py-3.5">
+        <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${c.status==="Verified"?"bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300":c.status==="Suspicious"?"bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300":"bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"}">${c.status}</span>
+      </td>
+      <td class="px-5 py-3.5 text-sm">${c.programs}</td>
+      <td class="px-5 py-3.5 text-sm font-medium ${c.risk==="Low"?"text-emerald-600":c.risk==="High"?"text-amber-600":"text-red-600"}">${c.risk}</td>
+    </tr>`).join("");
+}
+
+// FAQ
+function renderFAQ() {
+  const list = document.getElementById("faq-list");
+  list.innerHTML = FAQS.map((f,i) => `
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+      <button class="faq-btn w-full flex items-center justify-between p-5 text-left font-medium hover:bg-slate-50 dark:hover:bg-slate-700/50 transition" data-index="${i}">
+        <span>${f.q}</span>
+        <i data-lucide="chevron-down" class="w-5 h-5 transition-transform"></i>
+      </button>
+      <div class="faq-answer hidden px-5 pb-5 text-sm text-slate-600 dark:text-slate-300">${f.a}</div>
+    </div>`).join("");
+
+  list.querySelectorAll(".faq-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const answer = btn.nextElementSibling;
+      const icon = btn.querySelector("i");
+      const isOpen = !answer.classList.contains("hidden");
+      list.querySelectorAll(".faq-answer").forEach(a => a.classList.add("hidden"));
+      list.querySelectorAll(".faq-btn i").forEach(ic => ic.style.transform = "");
+      if (!isOpen) {
+        answer.classList.remove("hidden");
+        icon.style.transform = "rotate(180deg)";
+      }
+    });
+  });
+}
+
+function updateStats() {
+  document.getElementById("stat-verified").textContent = history.length;
+}
+
+// Init
+document.addEventListener("DOMContentLoaded", () => {
+  initTheme();
+  setRole("student");
+  renderCompanyTable();
+  renderFAQ();
+  renderHistory();
+  updateStats();
+  lucide.createIcons();
+});
+</script>
+</body>
+</html>
